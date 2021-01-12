@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+scan：当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。
+scanPeriod：设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒当scan为true时，此属性生效。默认的时间间隔为1分钟。
+debug：当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。
+-->
+<configuration scan="false" scanPeriod="60 seconds" debug="false">
+
+    <!-- 日志文件输出路径 -->
+    <property name="logFilePath" value="log"/>
+
+    <!-- 日志文件名 -->
+    <property name="logFileName" value="maochat"/>
+
+    <!--自定义颜色配置 此处converterClass引用的是日志颜色类的路径， 此匹配的是第二种控制台色彩输出方式-->
+    <conversionRule conversionWord="customColor" converterClass="com.ypw.code.spring.log.LogbackColorful"/>
+
+    <!--
+        日志输出格式：
+            %d表示日期时间，
+            %thread表示线程名，
+            %-5level：级别从左显示5个字符宽度
+            %logger{50} 表示logger名字最长50个字符，否则按照句点分割。
+            %msg：日志消息，
+            %n是换行符
+        -->
+    <property name="logPattern" value="%d{MM/dd-HH:mm:ss} [%thread] %customColor(%-5level) %magenta(%logger) %customColor(%msg%n)"/>
+    <property name="logPatternFile" value="%d{MM/dd-HH:mm:ss} [%thread] %-5level %logger %msg%n"/>
+
+    <!-- 控制台输出日志 -->
+    <appender name="logOutConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${logPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
+    <!-- 该配置表示每天生成一个日志文件，保存30天的日志文件。-->
+    <appender name="LogOutFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 指定日志文件的名称 -->
+        <file>${logFilePath}/${logFileName}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${logFileName}-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <MaxHistory>30</MaxHistory>
+            <maxFileSize>10MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${logPatternFile}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 开发、测试环境 -->
+    <springProfile name="!prod">
+        <!-- 日志级别调成 DEBUG级别可以看到sql执行 -->
+        <logger name="com.ypw.code" level="trace"/>
+        <!-- level用来设置打印级别，大小写无关-->
+        <root level="info">
+            <!-- 控制台输出日志-->
+            <appender-ref ref="logOutConsole"/>
+            <!-- 滚动输出日志记录文件/每天-->
+            <appender-ref ref="LogOutFileAppender"/>
+        </root>
+    </springProfile>
+
+    <!-- 生产环境 -->
+    <springProfile name="prod">
+        <logger name="com.ypw.code" level="error"/>
+        <!-- level用来设置打印级别，大小写无关-->
+        <root level="error">
+            <!-- 控制台输出日志-->
+            <appender-ref ref="logOutConsole"/>
+            <!-- 滚动输出日志记录文件/每天-->
+            <appender-ref ref="LogOutFileAppender"/>
+        </root>
+    </springProfile>
+
+<!--    &lt;!&ndash; level用来设置打印级别，大小写无关&ndash;&gt;-->
+<!--    <root name="de" level="warn">-->
+<!--        &lt;!&ndash; 控制台输出日志&ndash;&gt;-->
+<!--        <appender-ref ref="logOutConsole"/>-->
+<!--        &lt;!&ndash; 滚动输出日志记录文件/每天&ndash;&gt;-->
+<!--        <appender-ref ref="LogOutFileAppender"/>-->
+<!--    </root>-->
+</configuration>
